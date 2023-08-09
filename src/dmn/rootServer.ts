@@ -1,5 +1,5 @@
 import { NS } from '@ns';
-import { execNames, scriptNames } from '/lib/constants';
+import { execNames, initLog, scriptNames } from '/lib/constants';
 import { ServerData } from '/obj/serverInterfaces';
 
 
@@ -27,15 +27,19 @@ function rootForce(ns: NS): number {
 
 
 export async function main(ns: NS): Promise<void> {
+    initLog(ns);
     // Refresh scripts on all runners
     ServerData.getRunnerServer(ns, true).forEach(srv => {
+        ns.print(`Refresh working script on '${srv.hostName}'`);
         spreadScripts(ns, srv);
     });
+
 
     // Wait for new income
     while (true) {
         const serverList = ServerData.getServers(ns);
         serverList.filter(srv => srv.isNewTarget(rootForce(ns))).forEach(srv => {
+            ns.tprint(`INFO: New Server to Compromise -> ${srv.hostName}`);
             compromiseServer(ns, srv);
             spreadScripts(ns, srv);
         });
@@ -64,8 +68,6 @@ function compromiseServer(ns: NS, srv: ServerData): void {
  */
 function spreadScripts(ns: NS, srv: ServerData) {
     ns.nuke(srv.hostName);
-    ns.tprint(`ERROR : --> Copie des fichiers ${scriptNames} sur le serveur ${srv.hostName} en cours ...`);
-    ns.scp(scriptNames, srv.hostName);
-    ns.tprint(`ERROR : Copie des fichiers ${scriptNames} sur le serveur ${srv.hostName} TERMINE !`);
+    ns.tprintf(`WARNING : --> Copie des fichiers ${scriptNames} sur le serveur ${srv.hostName} : ${ns.scp(scriptNames, srv.hostName) ? 'OK' : 'KO'} ...`);
 }
 

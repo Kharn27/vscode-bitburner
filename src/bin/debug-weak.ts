@@ -16,7 +16,6 @@ export async function main(ns: NS): Promise<void> {
         }
     });
 
-
     // listen to promise resolution
     await weakDebug.then((value) => {
         // (parameter) value: number

@@ -120,13 +120,17 @@ export class ServerData {
         return Math.floor(freeRam / scriptRamUsage);
     }
 
-
+    secDiff(): number {
+        return this.sec.secLvl - this.sec.min;
+    }
 
     weakForce(ramNeed: number): number {
-        this.ns.toast(`RAM ${ramNeed} Go needed!
-        Nb Thread Available ${this.availableThread(ramNeed)}
-        Cores : ${this.hardware.cores}`, "warning", 5000);
         return this.ns.weakenAnalyze(this.availableThread(ramNeed), this.hardware.cores);
+    }
+
+    getThreadForWeaken(ramNeeded: number, secDiff: number): number {
+        const ratio = secDiff / this.weakForce(ramNeeded);
+        return Math.ceil(ratio * this.availableThread(ramNeeded));
     }
 
 
@@ -166,12 +170,12 @@ export class ServerData {
         return servers;
     }
 
-    static getTargetableServer(ns: NS): ServerData[] {
+    static getTargetableServers(ns: NS): ServerData[] {
         return ServerData.getServers(ns).filter(srv => srv.money.max > 0 && srv.rooted);
     }
 
-    static getRunnerServer(ns: NS, homeFilter = false): ServerData[] {
-        return ServerData.getServers(ns).filter(srv => srv.rooted && (!homeFilter || srv.hostName !== 'home'));
+    static getRunnerServer(ns: NS, withHome = true): ServerData[] {
+        return ServerData.getServers(ns).filter(srv => srv.rooted && (withHome || srv.hostName !== 'home') && srv.hardware.maxRam > 0);
     }
 
 }

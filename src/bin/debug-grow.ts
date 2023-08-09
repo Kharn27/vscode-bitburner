@@ -1,4 +1,6 @@
-import { NS } from '@ns'
+import { NS } from '@ns';
+import { PORT_G } from '/lib/constants';
+
 
 /**
  * Executes the main function.
@@ -16,10 +18,10 @@ export async function main(ns: NS): Promise<void> {
         }
     });
 
-
     // listen to promise resolution
     await growDebug.then((value) => {
         // (parameter) value: number
+        ns.writePort(PORT_G, server);
         ns.toast(`Grow ${server} return ${value}`, "success", 5000);
     }).catch((error) => {
         // (parameter) error: any

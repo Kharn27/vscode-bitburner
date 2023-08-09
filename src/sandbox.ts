@@ -1,8 +1,7 @@
 import { NS } from '@ns';
 import { ServerData } from './obj/serverInterfaces';
 import { ServerBuyer } from '/serverBuyerDaemon';
-import { RootableSrvWatchDog } from '/dmn/watchDog';
-import { AsyncBlockingQueue } from '/obj/asyncBlockingQueue';
+import { PORT_G, PORT_H, PORT_W } from '/lib/constants';
 
 const scriptNames: string[] = ["/bin/grow.js", "/bin/hack.js", "/bin/weak.js"];
 const scriptRam: number[] = [3];
@@ -18,12 +17,15 @@ export async function main(ns: NS): Promise<void> {
     const serverRooted: Set<string> = new Set();
     const servers: Set<ServerData> = ServerData.getServerList(ns);
 
-    const asyncQueue: AsyncBlockingQueue<ServerData> = new AsyncBlockingQueue();
-    const rootSrvWatchdog = new RootableSrvWatchDog(ns, asyncQueue);
-    // await rootSrvWatchdog.run();
-    setTimeout(await rootSrvWatchdog.run, 2000);
+    // const asyncQueue: AsyncBlockingQueue<ServerData> = new AsyncBlockingQueue();
+    // const rootSrvWatchdog = new RootableSrvWatchDog(ns, asyncQueue);
+    // // await rootSrvWatchdog.run();
+    // setTimeout(await rootSrvWatchdog.run, 2000);
 
-    asyncQueue.enqueue(new ServerData(ns, "home"));
+    // asyncQueue.enqueue(new ServerData(ns, "home"));
+
+
+
     // const stringQueue = new Queue<string>();
     // const voidFnQueue = new Queue<() => void>();
     // const numFnQueue = new Queue<() => number|PromiseLike<number>>();
@@ -35,14 +37,38 @@ export async function main(ns: NS): Promise<void> {
     // const executorNumFunc = new Executor(numFnQueue);
     // const executorAdvFunc = new Executor(advFnQueue);
     // const executorExecFunc = new Executor(execQueue);
+    const runner = new ServerData(ns, 'home');
+    const myServer = new ServerData(ns, 'neo-net');
 
     for (const i in scriptNames) {
         const s = scriptNames[i];
         scriptRam[i] = ns.getScriptRam(s);
         ns.tprint(`Ram usage for ${s} : ${scriptRam[i]}`);
     }
-    // const bestServer: ServerData = getBestServer(ns, servers, true);
-    // ns.tprintf(`Meilleur Serveur : ${bestServer.hostName}:${bestServer.ip} with ${ns.nFormat(bestServer.money.max, "$0.000a")}`);
+
+    const growFile: Set<string> = new Set();
+    const hackFile: Set<string> = new Set();
+    const weakFile: Set<string> = new Set();
+
+    ns.writePort(PORT_G, "message1");
+    ns.writePort(PORT_G, "message2");
+    ns.writePort(PORT_G, "message3");
+    ns.tprint(`Premier ReadPort : ${ns.readPort(PORT_G)}`);
+    ns.tprint(`Second ReadPort : ${ns.readPort(PORT_G)}`);
+    // growFile.add(runner.hostName)
+    // ns.writePort(GROWP, JSON.stringify(Array.from(growFile)));
+    // ns.writePort(HACKP, JSON.stringify(hackFile));
+    // ns.writePort(WEAKP, JSON.stringify(weakFile));
+
+    // growFile.add(myServer.hostName);
+    // ns.tprint(`Taille de growfile : ${growFile.size}`);
+    // cJSON.stringify(Array.from(growFile)));
+    // console.log(ns.readPort(GROWP));
+    // ns.tprint(`${ns.readPort(GROWP)}`);
+    // ns.tprint(`${ns.readPort(GROWP)}`);
+    ns.exec("bin/debug-grow.js", runner.hostName, 100, myServer.hostName);
+
+    await ns.sleep(10000);
 
 
     // const myServer = new ServerData(ns);
@@ -50,8 +76,6 @@ export async function main(ns: NS): Promise<void> {
 
     // ns.tprint(`${myServer.isFoo}`);
     // ns.tprint(`${nD.isFoo} blablabla ${JSON.stringify(nD)}`);
-    const runner = new ServerData(ns, 'home');
-    const myServer = new ServerData(ns, 'neo-net');
     // ns.tprint(ServerData);
     // ns.exec("bin/weakEv.js", 'home', 1, myServer.hostName);
 
@@ -76,10 +100,12 @@ export async function main(ns: NS): Promise<void> {
     //     \t GrowAnalyse ${ns.growthAnalyze(myServer.hostName, 2)} 
     //     \t GrowAnalyseSecure ${ns.growthAnalyzeSecurity(thread, myServer.hostName, cores)}`);
     // }
+    ns.tprint(`Diff to weak ${myServer.secDiff()}`);
     ns.tprint(`Serveur cash à ${myServer.money.actualPercent * 100}%`);
     ns.tprint(`Multiplicateur nécessaire ${myServer.money.actualRatio}`);
-    ns.tprint(`Nombre de Thread pour revenir a 100% de l'argent : ${Math.ceil(ns.growthAnalyze(myServer.hostName, myServer.money.actualRatio, runner.hardware.cores))}`);
-    ns.tprint(`Nombre de thread pour récupérer ${ns.nFormat(Math.floor(myServer.money.available / 2), "$0.000a")} : ${Math.ceil(ns.hackAnalyzeThreads(myServer.hostName, Math.floor(myServer.money.available / 2)))} thread(s)`);
+    ns.tprint(`Nombre de Thread pour rétablir 100% de l'argent From home: ${Math.ceil(ns.growthAnalyze(myServer.hostName, myServer.money.actualRatio, runner.hardware.cores))}`);
+    ns.tprint(`Nombre de Thread pour rétablir 100% de l'argent From himself: ${Math.ceil(ns.growthAnalyze(myServer.hostName, myServer.money.actualRatio, myServer.hardware.cores))}`);
+    ns.tprint(`Nombre de thread pour voler ${ns.nFormat(Math.floor(myServer.money.available / 2), "$0.000a")} : ${Math.ceil(ns.hackAnalyzeThreads(myServer.hostName, Math.floor(myServer.money.available / 2)))} thread(s)`);
     ns.tprint(`Money Hack for one Thread ${ns.hackAnalyze(myServer.hostName) * 100}%`);
     ns.tprint(`Money Hack for 150 Thread ${ns.hackAnalyze(myServer.hostName) * 100 * 150}%`);
     ns.tprint(`HackTime for for server ${myServer.hostName} : ${ns.getHackTime(myServer.hostName)}ms`);
